@@ -514,6 +514,11 @@ impl<P: JsonRpcClient> Middleware for Provider<P> {
         self.request("eth_accounts", ()).await
     }
 
+    #[cfg(all(feature = "eip1196"))]
+    async fn request_accounts(&self) -> Result<Vec<Address>, ProviderError> {
+        self.request("eth_requestAccounts", ()).await
+    }
+
     /// Returns the nonce of the address
     async fn get_transaction_count<T: Into<NameOrAddress> + Send + Sync>(
         &self,

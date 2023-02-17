@@ -394,6 +394,11 @@ pub trait Middleware: Sync + Send + Debug {
         self.inner().get_accounts().await.map_err(FromErr::from)
     }
 
+    #[cfg(all(feature = "eip1193"))]
+    async fn request_accounts(&self) -> Result<Vec<Address>, Self::Error> {
+        self.inner().request_accounts().await.map_err(FromErr::from)
+    }
+
     async fn send_raw_transaction<'a>(
         &'a self,
         tx: Bytes,
