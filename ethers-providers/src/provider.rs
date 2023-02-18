@@ -514,7 +514,7 @@ impl<P: JsonRpcClient> Middleware for Provider<P> {
         self.request("eth_accounts", ()).await
     }
 
-    #[cfg(all(feature = "eip1196"))]
+    #[cfg(all(feature = "eip1193"))]
     async fn request_accounts(&self) -> Result<Vec<Address>, ProviderError> {
         self.request("eth_requestAccounts", ()).await
     }
