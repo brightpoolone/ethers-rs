@@ -147,7 +147,9 @@ impl Eip1193 {
 
     pub fn on(self, event: &str, callback: Box<dyn FnMut(JsValue)>) -> Result<(), Eip1193Error>{
         let ethereum = Ethereum::default()?;
-        ethereum.on(event, &Closure::wrap(callback));
+        let closure = Closure::wrap(callback);
+        ethereum.on(event, &closure);
+        closure.forget();
         Ok(())
     }
 
