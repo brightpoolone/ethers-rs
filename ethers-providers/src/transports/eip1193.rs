@@ -1,31 +1,31 @@
 use super::common::JsonRpcError;
 use crate::{provider::ProviderError, JsonRpcClient};
 use async_trait::async_trait;
-use serde::{de::DeserializeOwned, Serialize, Deserialize};
+use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
 use wasm_bindgen::{prelude::*, closure::Closure, JsValue};
 use gloo_utils::format::JsValueSerdeExt;
 
-#[derive(Serialize, Deserialize)]
-pub struct RequestMethod {
-    method: String
-}
-
 #[wasm_bindgen]
-struct RequestArguments {
+pub struct Request {
     method: String,
-    params: js_sys::Array,
+    params: JsValue
 }
 
 #[wasm_bindgen]
-impl RequestArguments {
+impl Request {
+
+    pub fn new(method: String, params: JsValue) -> Request {
+        Request { method, params }
+    }
+
     #[wasm_bindgen(getter)]
     pub fn method(&self) -> String {
         self.method.clone()
     }
 
     #[wasm_bindgen(getter)]
-    pub fn params(&self) -> js_sys::Array {
+    pub fn params(&self) -> JsValue {
         self.params.clone()
     }
 }
@@ -73,7 +73,7 @@ extern "C" {
     pub type Ethereum;
 
     #[wasm_bindgen(catch, method)]
-    async fn request(_: &Ethereum, args: RequestArguments) -> Result<JsValue, JsValue>;
+    async fn request(_: &Ethereum, args: Request) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(method)]
     fn on(_: &Ethereum, eventName: &str, listener: &Closure<dyn FnMut(JsValue)>);
@@ -120,14 +120,14 @@ impl JsonRpcClient for Eip1193 {
     ) -> Result<R, Eip1193Error> {
 
         let ethereum = Ethereum::default()?;
-        let params = JsValue::from_serde(&params)?;
-        let js_params = if params.is_array() { js_sys::Array::from(&params) } else { js_sys::Array::new() };
-        let result = ethereum.request(RequestArguments { method: method.to_string(), params: js_params}).await?;
+        let t_params = JsValue::from_serde(&params)?;
+        let js_params = if t_params.is_null() { js_sys::Array::new().into() } else { t_params };
+        let payload = Request::new(method.to_string(), js_params.clone());
         
-        if let Ok(response) = result.into_serde() {
-            Ok(response)
-        } else {
-            Err(Eip1193Error::JsParseError)
+
+        match ethereum.request(payload).await {
+            Ok(r) => Ok(r.into_serde().unwrap()),
+            Err(e) => Err(e.into())
         }
     }
 }
