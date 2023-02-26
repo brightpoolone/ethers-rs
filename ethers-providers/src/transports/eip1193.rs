@@ -103,7 +103,7 @@ impl From<Eip1193Error> for ProviderError {
 
 impl From<JsValue> for Eip1193Error {
     fn from(src: JsValue) -> Self {
-        Eip1193Error::JsValueError(src.into_serde::<String>().unwrap())
+        Eip1193Error::JsValueError(format!("{:?}", src))
     }
 }
 
