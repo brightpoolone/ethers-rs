@@ -32,6 +32,7 @@ semver = { version = "1.0.16", optional = true }
 trezor-client = { version = "0.0.7", optional = true, default-features = false, features = [
     "f_ethereum",
 ] }
+cryptoki = { version = "0.4.1", default-features = false, optional = true }
 
 # aws
 rusoto_core = { version = "0.48.0", default-features = false, optional = true }
@@ -62,3 +63,4 @@ ledger = ["coins-ledger", "futures", "semver"]
 yubi = ["yubihsm"]
 aws = ["rusoto_core/rustls", "rusoto_kms/rustls", "tracing", "spki"]
 trezor = ["trezor-client", "futures", "semver", "home"]
+pkcs11 = ["cryptoki"]

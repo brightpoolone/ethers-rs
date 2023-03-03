@@ -1,5 +1,6 @@
 //! AWS KMS-based Signer
 
+use super::{apply_eip155, rsig_from_digest_bytes_trial_recovery, rsig_to_ethsig};
 use ethers_core::{
     k256::ecdsa::{Error as K256Error, Signature as KSig, VerifyingKey},
     types::{
@@ -15,7 +16,7 @@ use rusoto_kms::{
 use tracing::{debug, instrument, trace};
 
 mod utils;
-use utils::{apply_eip155, rsig_to_ethsig, verifying_key_to_address};
+use utils::verifying_key_to_address;
 
 /// An ethers Signer that uses keys held in Amazon AWS KMS.
 ///
@@ -212,7 +213,7 @@ impl AwsSigner {
     ) -> Result<EthSig, AwsSignerError> {
         let sig = self.sign_digest(digest.into()).await?;
 
-        let sig = utils::rsig_from_digest_bytes_trial_recovery(&sig, digest.into(), &self.pubkey);
+        let sig = rsig_from_digest_bytes_trial_recovery(&sig, digest.into(), &self.pubkey);
 
         let mut sig = rsig_to_ethsig(&sig);
         apply_eip155(&mut sig, chain_id);
@@ -255,7 +256,7 @@ impl super::Signer for AwsSigner {
             payload.encode_eip712().map_err(|e| Self::Error::Eip712Error(e.to_string()))?;
 
         let sig = self.sign_digest(digest).await?;
-        let sig = utils::rsig_from_digest_bytes_trial_recovery(&sig, digest, &self.pubkey);
+        let sig = rsig_from_digest_bytes_trial_recovery(&sig, digest, &self.pubkey);
         let sig = rsig_to_ethsig(&sig);
 
         Ok(sig)
