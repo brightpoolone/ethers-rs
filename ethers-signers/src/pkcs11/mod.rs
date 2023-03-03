@@ -14,7 +14,41 @@ use ethers_core::{
     },
     utils::{hash_message, keccak256},
 };
-use std::path::Path;
+use std::{fmt, path::Path};
+
+#[derive(Clone)]
+pub struct Pkcs11Signer {
+    pkcs11: Pkcs11,
+    slot: Slot,
+    pin: String,
+    chain_id: u64,
+    priv_key_handle: ObjectHandle,
+    address: Address,
+    pubkey: VerifyingKey,
+}
+
+impl fmt::Debug for Pkcs11Signer {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Pkcs11Signer")
+            .field("slot", &self.slot.id())
+            .field("chain_id", &self.chain_id)
+            .field("address", &self.address)
+            .field("pubkey", &hex::encode(self.pubkey.to_bytes()))
+            .finish()
+    }
+}
+
+impl fmt::Display for Pkcs11Signer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Pkcs11Signer {{ address: {}, chain_id: {}, slot: {} }}",
+            self.address,
+            self.chain_id,
+            self.slot.id()
+        )
+    }
+}
 
 #[derive(Debug, thiserror::Error)]
 pub enum Pkcs11SignerError {
@@ -34,17 +68,6 @@ pub enum Pkcs11SignerError {
     WrongKey,
     #[error("wrong key params")]
     WrongKeyParams,
-}
-
-#[derive(Debug)]
-pub struct Pkcs11Signer {
-    pkcs11: Pkcs11,
-    slot: Slot,
-    pin: String,
-    chain_id: u64,
-    priv_key_handle: ObjectHandle,
-    address: Address,
-    verifying_key: VerifyingKey,
 }
 
 fn get_slot_with_serial_number(
@@ -114,18 +137,10 @@ impl Pkcs11Signer {
         let address = Address::from_slice(&hash[12..]);
 
         // Convert public key params to `VerifyingKey`
-        let verifying_key = VerifyingKey::from_sec1_bytes(&ec_point[2..])
+        let pubkey = VerifyingKey::from_sec1_bytes(&ec_point[2..])
             .map_err(|_| Pkcs11SignerError::WrongKey)?;
 
-        Ok(Self {
-            pkcs11,
-            slot,
-            pin,
-            chain_id,
-            priv_key_handle,
-            address,
-            verifying_key,
-        })
+        Ok(Self { pkcs11, slot, pin, chain_id, priv_key_handle, address, pubkey })
     }
 
     /// Open PKCS#11 session and login user with PIN.
@@ -146,7 +161,7 @@ impl Pkcs11Signer {
         let sig = session.sign(&Mechanism::Ecdsa, self.priv_key_handle, digest.as_bytes())?;
         let sig = KSig::try_from(sig.as_ref())?;
 
-        let sig = rsig_from_digest_bytes_trial_recovery(&sig, digest.into(), &self.verifying_key);
+        let sig = rsig_from_digest_bytes_trial_recovery(&sig, digest.into(), &self.pubkey);
 
         let mut sig = rsig_to_ethsig(&sig);
         apply_eip155(&mut sig, chain_id);
@@ -185,7 +200,7 @@ impl super::Signer for Pkcs11Signer {
         let session = self.open_session()?;
         let sig = session.sign(&Mechanism::Ecdsa, self.priv_key_handle, &digest)?;
         let sig = KSig::try_from(sig.as_ref())?;
-        let sig = rsig_from_digest_bytes_trial_recovery(&sig, digest, &self.verifying_key);
+        let sig = rsig_from_digest_bytes_trial_recovery(&sig, digest, &self.pubkey);
 
         let sig = rsig_to_ethsig(&sig);
         Ok(sig)
@@ -211,19 +226,6 @@ mod test {
     use crate::Signer;
     use std::env::var;
 
-    // Convert string of hex digits to `Vec`
-    fn hex_decode<T: AsRef<[u8]>>(hex: T) -> Vec<u8> {
-        let hex_value = |char: u8| -> u8 {
-            match char {
-                b'A'..=b'F' => char - b'A' + 10,
-                b'a'..=b'f' => char - b'a' + 10,
-                b'0'..=b'9' => char - b'0',
-                _ => panic!("invalid hex digit"),
-            }
-        };
-        hex.as_ref().chunks(2).map(|chunk| hex_value(chunk[0]) << 4 | hex_value(chunk[1])).collect()
-    }
-
     #[tokio::test]
     async fn test_hsm() {
         let chain_id = 1;
@@ -247,7 +249,7 @@ mod test {
             Path::new(&module_path),
             &serial_number,
             pin,
-            hex_decode(key_id),
+            hex::decode(key_id).unwrap(),
             chain_id,
         )
         .unwrap();
