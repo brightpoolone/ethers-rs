@@ -2,7 +2,7 @@ use super::{apply_eip155, rsig_from_digest_bytes_trial_recovery, rsig_to_ethsig}
 use cryptoki::{
     context::{CInitializeArgs, Pkcs11},
     mechanism::Mechanism,
-    object::{Attribute, AttributeType, ObjectHandle},
+    object::{Attribute, AttributeType, KeyType, ObjectHandle},
     session::{Session, UserType},
     slot::Slot,
 };
@@ -70,6 +70,10 @@ pub enum Pkcs11SignerError {
     WrongKeyParams,
 }
 
+/// Secp256k1 curve OID: 06052b8104000a
+const EC_SECP256K1: [u8; 7] = [6, 5, 43, 129, 4, 0, 10];
+
+/// Find card slot with a given serial number.
 fn get_slot_with_serial_number(
     pkcs11: &Pkcs11,
     serial_number: &str,
@@ -102,16 +106,24 @@ impl Pkcs11Signer {
         session.login(UserType::User, Some(&pin))?;
 
         // Retrieve private key
-        let mut objects =
-            session.find_objects(&[Attribute::Sign(true), Attribute::Id(key_id.clone())])?;
+        let mut objects = session.find_objects(&[
+            Attribute::Sign(true),
+            Attribute::KeyType(KeyType::EC),
+            Attribute::EcParams(EC_SECP256K1.into()),
+            Attribute::Id(key_id.clone()),
+        ])?;
         let priv_key_handle = match objects.pop() {
             Some(handle) => handle,
             None => return Err(Pkcs11SignerError::KeyNotFound),
         };
 
         // Retrieve public key
-        let mut objects =
-            session.find_objects(&[Attribute::Verify(true), Attribute::Id(key_id)])?;
+        let mut objects = session.find_objects(&[
+            Attribute::Verify(true),
+            Attribute::KeyType(KeyType::EC),
+            Attribute::EcParams(EC_SECP256K1.into()),
+            Attribute::Id(key_id),
+        ])?;
         let pub_key_handle = match objects.pop() {
             Some(handle) => handle,
             None => return Err(Pkcs11SignerError::KeyNotFound),
