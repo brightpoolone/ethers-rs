@@ -5,7 +5,6 @@ use cryptoki::{
     object::{Attribute, AttributeType, KeyType, ObjectHandle},
     session::{Session, UserType},
     slot::Slot,
-    types::AuthPin
 };
 use ethers_core::{
     k256::ecdsa::{Error as KError, Signature as KSig, VerifyingKey},
@@ -104,7 +103,7 @@ impl Pkcs11Signer {
 
         let slot = get_slot_with_serial_number(&pkcs11, serial_number)?;
         let session = pkcs11.open_ro_session(slot)?;
-        session.login(UserType::User, Some(&AuthPin::new(pin.clone().into())))?;
+        session.login(UserType::User, Some(&pin))?;
 
         // Retrieve private key
         let mut objects = session.find_objects(&[
@@ -159,7 +158,7 @@ impl Pkcs11Signer {
     /// Open PKCS#11 session and login user with PIN.
     fn open_session(&self) -> Result<Session, Pkcs11SignerError> {
         let session = self.pkcs11.open_ro_session(self.slot)?;
-        session.login(UserType::User, Some(&AuthPin::new(self.pin.clone().into())))?;
+        session.login(UserType::User, Some(&self.pin))?;
         Ok(session)
     }
 
