@@ -16,7 +16,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 ethers-core = { version = "^1.0.0", path = "../ethers-core", features = [
-  "eip712",
+    "eip712",
 ] }
 thiserror = { version = "1.0.38", default-features = false }
 coins-bip32 = "0.7.0"
@@ -28,19 +28,17 @@ elliptic-curve = { version = "0.12.3", default-features = false }
 sha2 = { version = "0.10.6", default-features = false }
 rand = { version = "0.8.5", default-features = false }
 yubihsm = { version = "0.41.0", features = [
-  "secp256k1",
-  "http",
-  "usb",
+    "secp256k1",
+    "http",
+    "usb",
 ], optional = true }
 futures-util = { version = "^0.3", optional = true }
 futures-executor = { version = "^0.3", optional = true }
 semver = { version = "1.0.16", optional = true }
 trezor-client = { version = "0.0.7", optional = true, default-features = false, features = [
-  "f_ethereum",
+    "f_ethereum",
 ] }
-cryptoki = { git = "https://github.com/parallaxsecond/rust-cryptoki", default-features = false, optional = true, features = [
-  "generate-bindings",
-] }
+cryptoki = "0.4.1"
 
 # aws
 rusoto_core = { version = "0.48.0", default-features = false, optional = true }
@@ -62,8 +60,8 @@ yubihsm = { version = "0.41.0", features = ["secp256k1", "usb", "mockhsm"] }
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 yubihsm = { version = "0.41.0", features = ["secp256k1", "usb", "mockhsm"] }
 tokio = { version = "1.18", default-features = false, features = [
-  "macros",
-  "rt",
+    "macros",
+    "rt",
 ] }
 tempfile = "3.3.0"
 
