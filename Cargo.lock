@@ -1505,6 +1505,7 @@ dependencies = [
  "bytes",
  "enr",
  "ethers-core",
+ "ethers-derive-eip712",
  "futures-channel",
  "futures-core",
  "futures-timer",

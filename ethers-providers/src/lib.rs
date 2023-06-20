@@ -399,6 +399,16 @@ pub trait Middleware: Sync + Send + Debug {
         self.inner().request_accounts().await.map_err(FromErr::from)
     }
 
+    /// Implements typed data signing according ot EIP712
+    #[cfg(all(feature = "eip1193"))]
+    async fn sign_typed_data<T: Into<Bytes> + Send + Sync>(
+        &self,
+        data: T,
+        from: &Address,
+    ) -> Result<Signature, ProviderError> {
+        self.inner().sign_typed_data(data, from).await.map_err(FromErr::from)
+    }
+
     async fn send_raw_transaction<'a>(
         &'a self,
         tx: Bytes,
