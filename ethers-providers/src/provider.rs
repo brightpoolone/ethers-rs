@@ -6,11 +6,7 @@ use crate::{
     FromErr, Http as HttpProvider, JsonRpcClient, JsonRpcClientWrapper, LogQuery, MockProvider,
     NodeInfo, PeerInfo, PendingTransaction, QuorumProvider, RwClient, SyncingStatus,
 };
-use serde::Deserialize;
-#[cfg(feature = "eip1193")]
-use ethers_core::types::transaction::eip712::TypedData;
-#[cfg(feature = "eip1193")]
-use ethers_core::types::transaction::eip712::Eip712DomainType;
+
 #[cfg(all(not(target_arch = "wasm32"), feature = "ws"))]
 use crate::transports::Authorization;
 #[cfg(not(target_arch = "wasm32"))]
@@ -523,96 +519,18 @@ impl<P: JsonRpcClient> Middleware for Provider<P> {
         self.request("eth_requestAccounts", ()).await
     }
 
-    /// Implements typed data signing according ot EIP712
+    /// Signs typed data using a specific account (EIP712). This account needs to be unlocked.
     #[cfg(feature = "eip1193")]
     async fn sign_typed_data<T: Into<Bytes> + Send + Sync>(
-    // async fn sign_typed_data(
         &self,
         data: T,
         from: &Address,
     ) -> Result<Signature, ProviderError> {
-        use std::collections::BTreeMap;
-
-        use ethers_core::types::{H160, transaction::eip712::EIP712Domain};
-        use serde_json::json;
-        use ethers_core::types::transaction::eip712::Eip712;
-
-        // let data = utils::serialize(&data.into());
-        // let mut types = BTreeMap::new();
-        // types.insert("mytype".to_string(), vec![Eip712DomainType {name: "mytype".to_string(), r#type: "mytype".to_string()}]);
-        // let data = TypedData {
-        //     domain: EIP712Domain {
-        //         chain_id: None,
-        //         name: None,
-        //         salt: None,
-        //         verifying_contract: None,
-        //         version: None,
-        //     },
-        //     types,
-        //     primary_type: "mytype".to_string(),
-        //     message: BTreeMap::new(),
-        // };
-        // let data = data.encode_eip712().unwrap().to_vec().into();
         let data = utils::serialize(&data);
-        // let data = json!(data);
-        // let data = [1u8, 2u8, 3u8];
         let from = utils::serialize(from);
-        // let from = utils::serialize(&H160::zero());
 
-        // get the response from `eth_signTypedData` call and trim the 0x-prefix if present.
-
-//         let data = json!(
-// {
-// "domain": { "name": "Defguard", "version": "1" },
-// "types": {
-//     "EIP712Domain": [
-//         { "name": "name", "type": "string" },
-//         { "name": "version", "type": "string" }
-//     ],
-//     "ProofOfOwnership": [
-//         { "name": "content", "type": "string" },
-//         { "name": "nonce", "type": "string" }
-//     ]
-// },
-// "primaryType": "ProofOfOwnership",
-// "message": {
-//     "content": "{}",
-//     "nonce": "{}"
-// }}
-//     );
-//         // let data = data.encode_eip712().unwrap();
-        // let data = TypedData::deserialize(data.to_vec()).unwrap().encode_eip712().unwrap().to_vec().into();
-        let sig: String = self.request("eth_signTypedData", [data, from]).await?;
-// use ethers_contract::EthAbiType;
-// use ethers_derive_eip712::*;
-// #[derive(Debug, Eip712, EthAbiType)]
-// #[eip712(
-//     name = "Radicle",
-//     version = "1",
-//     chain_id = 1,
-//     verifying_contract = "0x0000000000000000000000000000000000000000"
-//     // salt is an optional parameter
-//     salt = "my-unique-spice"
-// )]
-// pub struct Puzzle {
-//     pub organization: H160,
-//     pub contributor: H160,
-//     pub commit: String,
-//     pub project: String,
-// }
-
-// let puzzle = Puzzle {
-//     organization: "0000000000000000000000000000000000000000"
-//         .parse::<H160>()
-//         .expect("failed to parse address"),
-//     contributor: "0000000000000000000000000000000000000000"
-//         .parse::<H160>()
-//         .expect("failed to parse address"),
-//     commit: "5693b7019eb3e4487a81273c6f5e1832d77acb53".to_string(),
-//     project: "radicle-reward".to_string(),
-// };
-//         let data = puzzle;
-//         let sig: String = self.request("eth_signTypedData", [data, from]).await?;
+        // get the response from `eth_signTypedData_v4` call and trim the 0x-prefix if present.
+        let sig: String = self.request("eth_signTypedData_v4", [from, data]).await?;
         let sig = sig.strip_prefix("0x").unwrap_or(&sig);
 
         // decode the signature.

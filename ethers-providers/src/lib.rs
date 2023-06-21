@@ -394,13 +394,13 @@ pub trait Middleware: Sync + Send + Debug {
         self.inner().get_accounts().await.map_err(FromErr::from)
     }
 
-    #[cfg(all(feature = "eip1193"))]
+    #[cfg(feature = "eip1193")]
     async fn request_accounts(&self) -> Result<Vec<Address>, Self::Error> {
         self.inner().request_accounts().await.map_err(FromErr::from)
     }
 
-    /// Implements typed data signing according ot EIP712
-    #[cfg(all(feature = "eip1193"))]
+    /// Implements typed data signing according to EIP712
+    #[cfg(feature = "eip1193")]
     async fn sign_typed_data<T: Into<Bytes> + Send + Sync>(
         &self,
         data: T,
