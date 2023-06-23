@@ -135,10 +135,7 @@ impl JsonRpcClient for Eip1193 {
 impl Eip1193 {
 
     pub fn is_available() -> bool {
-        if Ethereum::default().is_ok() {
-            return true;
-        }
-        false
+        Ethereum::default().is_ok()
     }
 
     pub fn new() -> Self {

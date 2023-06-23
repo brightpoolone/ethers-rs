@@ -514,9 +514,29 @@ impl<P: JsonRpcClient> Middleware for Provider<P> {
         self.request("eth_accounts", ()).await
     }
 
-    #[cfg(all(feature = "eip1193"))]
+    #[cfg(feature = "eip1193")]
     async fn request_accounts(&self) -> Result<Vec<Address>, ProviderError> {
         self.request("eth_requestAccounts", ()).await
+    }
+
+    /// Signs typed data using a specific account (EIP712). This account needs to be unlocked.
+    #[cfg(feature = "eip1193")]
+    async fn sign_typed_data<T: Into<Bytes> + Send + Sync>(
+        &self,
+        data: T,
+        from: &Address,
+    ) -> Result<Signature, ProviderError> {
+        let data = utils::serialize(&data);
+        let from = utils::serialize(from);
+
+        // get the response from `eth_signTypedData_v4` call and trim the 0x-prefix if present.
+        let sig: String = self.request("eth_signTypedData_v4", [from, data]).await?;
+        let sig = sig.strip_prefix("0x").unwrap_or(&sig);
+
+        // decode the signature.
+        let sig = hex::decode(sig)?;
+        Ok(Signature::try_from(sig.as_slice())
+            .map_err(|e| ProviderError::CustomError(e.to_string()))?)
     }
 
     /// Returns the nonce of the address
