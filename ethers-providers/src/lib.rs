@@ -401,9 +401,9 @@ pub trait Middleware: Sync + Send + Debug {
 
     /// Implements typed data signing according to EIP712
     #[cfg(feature = "eip1193")]
-    async fn sign_typed_data<T: Into<Bytes> + Send + Sync>(
+    async fn sign_typed_data(
         &self,
-        data: T,
+        data: &str,
         from: &Address,
     ) -> Result<Signature, ProviderError> {
         self.inner().sign_typed_data(data, from).await.map_err(FromErr::from)
