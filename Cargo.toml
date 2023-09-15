@@ -80,6 +80,7 @@ openssl = [
 dev-rpc = ["ethers-providers/dev-rpc"]
 ## signers
 ledger = ["ethers-signers/ledger"]
+pkcs11 = ["ethers-signers/pkcs11"]
 trezor = ["ethers-signers/trezor"]
 yubi = ["ethers-signers/yubi"]
 ## contracts
