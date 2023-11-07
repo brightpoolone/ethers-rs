@@ -1,20 +1,19 @@
 use super::common::JsonRpcError;
 use crate::{provider::ProviderError, JsonRpcClient};
 use async_trait::async_trait;
+use gloo_utils::format::JsValueSerdeExt;
 use serde::{de::DeserializeOwned, Serialize};
 use thiserror::Error;
-use wasm_bindgen::{prelude::*, closure::Closure, JsValue};
-use gloo_utils::format::JsValueSerdeExt;
+use wasm_bindgen::{closure::Closure, prelude::*, JsValue};
 
 #[wasm_bindgen]
 pub struct Request {
     method: String,
-    params: JsValue
+    params: JsValue,
 }
 
 #[wasm_bindgen]
 impl Request {
-
     pub fn new(method: String, params: JsValue) -> Request {
         Request { method, params }
     }
@@ -44,6 +43,9 @@ pub enum Eip1193Error {
     #[error("JsValue error")]
     JsValueError(String),
 
+    #[error("RPC Error")]
+    RpcError(ErrorMessage),
+
     /// Thrown if no window.ethereum is found in DOM
     #[error("No ethereum found")]
     JsNoEthereum,
@@ -57,7 +59,7 @@ pub enum Eip1193Error {
 
     #[error(transparent)]
     /// Serde JSON Error
-    SerdeJson (#[from] serde_json::Error),
+    SerdeJson(#[from] serde_json::Error),
 }
 
 #[wasm_bindgen(inline_js = "export function get_provider_js() {return window.ethereum}")]
@@ -103,8 +105,26 @@ impl From<Eip1193Error> for ProviderError {
 
 impl From<JsValue> for Eip1193Error {
     fn from(src: JsValue) -> Self {
-        Eip1193Error::JsValueError(format!("{:?}", src))
+        if let Ok(message) = src.into_serde::<ErrorMessage>() {
+            Eip1193Error::RpcError(message)
+        } else {
+            Eip1193Error::JsValueError(format!("{:?}", src))
+        }
     }
+}
+
+#[derive(Debug, Clone, DeserializeOwned)]
+pub struct InnerErrorMessage {
+    pub code: i64,
+    pub message: String,
+    pub data: Option<String>,
+}
+
+#[derive(Debug, Clone, DeserializeOwned)]
+pub struct ErrorMessage {
+    pub code: i64,
+    pub message: String,
+    pub data: Option<InnerErrorMessave>,
 }
 
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
@@ -118,22 +138,19 @@ impl JsonRpcClient for Eip1193 {
         method: &str,
         params: T,
     ) -> Result<R, Eip1193Error> {
-
         let ethereum = Ethereum::default()?;
         let t_params = JsValue::from_serde(&params)?;
         let js_params = if t_params.is_null() { js_sys::Array::new().into() } else { t_params };
         let payload = Request::new(method.to_string(), js_params.clone());
-        
 
         match ethereum.request(payload).await {
             Ok(r) => Ok(r.into_serde().unwrap()),
-            Err(e) => Err(e.into())
+            Err(e) => Err(e.into()),
         }
     }
 }
 
 impl Eip1193 {
-
     pub fn is_available() -> bool {
         Ethereum::default().is_ok()
     }
@@ -142,13 +159,11 @@ impl Eip1193 {
         Eip1193 {}
     }
 
-    pub fn on(self, event: &str, callback: Box<dyn FnMut(JsValue)>) -> Result<(), Eip1193Error>{
+    pub fn on(self, event: &str, callback: Box<dyn FnMut(JsValue)>) -> Result<(), Eip1193Error> {
         let ethereum = Ethereum::default()?;
         let closure = Closure::wrap(callback);
         ethereum.on(event, &closure);
         closure.forget();
         Ok(())
     }
-
 }
-
