@@ -26,7 +26,7 @@ pub use retry::*;
 #[cfg(all(feature = "eip1193"))]
 mod eip1193;
 #[cfg(all(feature = "eip1193"))]
-pub use eip1193::Eip1193;
+pub use eip1193::{Eip1193, Eip1193Error};
 
 mod mock;
 pub use mock::{MockError, MockProvider};
