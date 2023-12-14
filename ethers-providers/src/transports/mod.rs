@@ -23,5 +23,10 @@ pub use rw::{RwClient, RwClientError};
 mod retry;
 pub use retry::*;
 
+#[cfg(all(feature = "eip1193"))]
+mod eip1193;
+#[cfg(all(feature = "eip1193"))]
+pub use eip1193::Eip1193;
+
 mod mock;
 pub use mock::{MockError, MockProvider};

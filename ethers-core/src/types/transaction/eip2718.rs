@@ -29,13 +29,13 @@ use thiserror::Error;
 #[cfg_attr(feature = "legacy", serde(untagged))]
 pub enum TypedTransaction {
     // 0x00
-    #[serde(rename = "0x00")]
+    #[serde(rename = "0x0")]
     Legacy(TransactionRequest),
     // 0x01
-    #[serde(rename = "0x01")]
+    #[serde(rename = "0x1")]
     Eip2930(Eip2930TransactionRequest),
     // 0x02
-    #[serde(rename = "0x02")]
+    #[serde(rename = "0x2")]
     Eip1559(Eip1559TransactionRequest),
 }
 

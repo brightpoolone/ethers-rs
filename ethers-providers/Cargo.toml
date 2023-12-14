@@ -21,7 +21,9 @@ async-trait = { version = "0.1.50", default-features = false }
 hex = { version = "0.4.3", default-features = false, features = ["std"] }
 reqwest = { version = "0.11.14", default-features = false, features = ["json"] }
 serde = { version = "1.0.124", default-features = false, features = ["derive"] }
-serde_json = { version = "1.0.64", default-features = false, features = ["raw_value"] }
+serde_json = { version = "1.0.64", default-features = false, features = [
+  "raw_value",
+] }
 thiserror = { version = "1.0", default-features = false }
 url = { version = "2.3.1", default-features = false }
 auto_impl = { version = "1.0.1", default-features = false }
@@ -36,11 +38,16 @@ futures-channel = { version = "0.3.16", default-features = false, optional = tru
 pin-project = { version = "1.0.11", default-features = false }
 
 # peer-related admin namespace
-enr = { version = "0.7.0", default-features = false, features = ["k256", "serde"] }
+enr = { version = "0.7.0", default-features = false, features = [
+  "k256",
+  "serde",
+] }
 
 # tracing
 tracing = { version = "0.1.37", default-features = false }
-tracing-futures = { version = "0.2.5", default-features = false, features = ["std-future"] }
+tracing-futures = { version = "0.2.5", default-features = false, features = [
+  "std-future",
+] }
 
 bytes = { version = "1.4.0", default-features = false, optional = true }
 once_cell = "1.17.1"
@@ -53,7 +60,7 @@ winapi = { version = "0.3", optional = true }
 # tokio
 tokio = { version = "1.18", default-features = false, features = ["time"] }
 tokio-tungstenite = { version = "0.18.0", default-features = false, features = [
-    "connect",
+  "connect",
 ], optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
@@ -61,6 +68,8 @@ ws_stream_wasm = "0.7"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3", features = ["console"] }
+js-sys = "0.3.61"
+gloo-utils = "0.1.6"
 wasm-timer = "0.2"
 # this is currently necessary for `wasm-timer::Delay` to work
 parking_lot = { version = "0.11", features = ["wasm-bindgen"] }
@@ -68,13 +77,17 @@ parking_lot = { version = "0.11", features = ["wasm-bindgen"] }
 getrandom = { version = "0.2", features = ["js"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-tokio = { version = "1.18", default-features = false, features = ["rt", "macros", "time"] }
+tokio = { version = "1.18", default-features = false, features = [
+  "rt",
+  "macros",
+  "time",
+] }
 tempfile = "3.3.0"
 
 [features]
 default = ["ws", "rustls"]
 celo = ["ethers-core/celo"]
-
+eip1193 = []
 ws = ["tokio-tungstenite", "futures-channel"]
 ipc = ["tokio/io-util", "bytes", "futures-channel", "winapi"]
 

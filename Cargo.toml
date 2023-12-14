@@ -2,7 +2,7 @@
 name = "ethers"
 version = "1.0.2"
 edition = "2021"
-rust-version = "1.64" # must also be changed in **/Cargo.toml and .clippy.toml
+rust-version = "1.64"                                                        # must also be changed in **/Cargo.toml and .clippy.toml
 authors = ["Georgios Konstantopoulos <me@gakonst.com>"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -13,27 +13,27 @@ description = "Complete Ethereum library and wallet implementation in Rust."
 
 [workspace]
 members = [
-    "ethers-addressbook",
-    "ethers-contract",
-    "ethers-providers",
-    "ethers-signers",
-    "ethers-core",
-    "ethers-middleware",
-    "ethers-etherscan",
-    "ethers-solc",
-    # Example crates
-    "examples/*",
+  "ethers-addressbook",
+  "ethers-contract",
+  "ethers-providers",
+  "ethers-signers",
+  "ethers-core",
+  "ethers-middleware",
+  "ethers-etherscan",
+  "ethers-solc",
+  # Example crates
+  "examples/*",
 ]
 
 default-members = [
-    "ethers-addressbook",
-    "ethers-contract",
-    "ethers-providers",
-    "ethers-signers",
-    "ethers-core",
-    "ethers-middleware",
-    "ethers-etherscan",
-    "ethers-solc",
+  "ethers-addressbook",
+  "ethers-contract",
+  "ethers-providers",
+  "ethers-signers",
+  "ethers-core",
+  "ethers-middleware",
+  "ethers-etherscan",
+  "ethers-solc",
 ]
 
 [package.metadata.docs.rs]
@@ -47,12 +47,12 @@ features = ["full"]
 default = ["abigen"]
 
 celo = [
-    "ethers-core/celo",
-    "ethers-providers/celo",
-    "ethers-signers/celo",
-    "ethers-contract/celo",
-    "ethers-middleware/celo",
-    "legacy",
+  "ethers-core/celo",
+  "ethers-providers/celo",
+  "ethers-signers/celo",
+  "ethers-contract/celo",
+  "ethers-middleware/celo",
+  "legacy",
 ]
 
 legacy = ["ethers-core/legacy", "ethers-contract/legacy"]
@@ -63,19 +63,20 @@ eip712 = ["ethers-contract/eip712", "ethers-core/eip712"]
 ## providers
 ws = ["ethers-providers/ws"]
 ipc = ["ethers-providers/ipc"]
+eip1193 = ["ethers-providers/eip1193"]
 rustls = [
-    "ethers-middleware/rustls",
-    "ethers-providers/rustls",
-    "ethers-etherscan/rustls",
-    "ethers-contract/rustls",
-    "ethers-solc/rustls",
+  "ethers-middleware/rustls",
+  "ethers-providers/rustls",
+  "ethers-etherscan/rustls",
+  "ethers-contract/rustls",
+  "ethers-solc/rustls",
 ]
 openssl = [
-    "ethers-middleware/openssl",
-    "ethers-providers/openssl",
-    "ethers-etherscan/openssl",
-    "ethers-contract/openssl",
-    "ethers-solc/openssl",
+  "ethers-middleware/openssl",
+  "ethers-providers/openssl",
+  "ethers-etherscan/openssl",
+  "ethers-contract/openssl",
+  "ethers-solc/openssl",
 ]
 dev-rpc = ["ethers-providers/dev-rpc"]
 ## signers
@@ -104,18 +105,18 @@ ethers-etherscan = { version = "^1.0.0", default-features = false, path = "./eth
 
 [dev-dependencies]
 ethers-contract = { version = "^1.0.0", default-features = false, path = "./ethers-contract", features = [
-    "abigen",
-    "eip712",
+  "abigen",
+  "eip712",
 ] }
 ethers-providers = { version = "^1.0.0", default-features = false, path = "./ethers-providers", features = [
-    "ws",
+  "ws",
 ] }
 tempfile = "3.3.0"
 
 [target.'cfg(target_family = "unix")'.dev-dependencies]
 ethers-providers = { version = "^1.0.0", default-features = false, path = "./ethers-providers", features = [
-    "ws",
-    "ipc",
+  "ws",
+  "ipc",
 ] }
 eyre = "0.6"
 rand = "0.8.5"
@@ -129,4 +130,3 @@ bytes = "1.4.0"
 [profile.release.package.ethers-wasm]
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"
-
