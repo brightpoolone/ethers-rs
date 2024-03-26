@@ -107,7 +107,7 @@ impl Pkcs11Signer {
 
         // Retrieve private key
         let mut objects = session.find_objects(&[
-            Attribute::Sign(true),
+            Attribute::SignRecover(true),
             Attribute::KeyType(KeyType::EC),
             Attribute::EcParams(EC_SECP256K1.into()),
             Attribute::Id(key_id.clone()),
