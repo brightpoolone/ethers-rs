@@ -3,6 +3,8 @@ use futures_util::{select, sink::SinkExt, stream::StreamExt, FutureExt};
 
 use serde_json::value::RawValue;
 
+use crate::JsonRpcError;
+
 use super::{types::*, WsClientError};
 use tracing::{error, trace};
 
@@ -103,6 +105,7 @@ impl WsBackend {
             }
             Err(e) => {
                 error!(e = %e, "Failed to deserialize message");
+                _ = self.handler.unbounded_send(PubSubItem::Error { id: 1, error: JsonRpcError { code: 100, message: "Wypierdalam".to_string(), data: None} });
                 return Err(WsClientError::JsonError(e))
             }
         }

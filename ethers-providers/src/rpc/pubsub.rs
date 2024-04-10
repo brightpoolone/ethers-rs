@@ -99,7 +99,7 @@ where
                     Ok(res) => Poll::Ready(Some(res)),
                     Err(err) => {
                         error!("failed to deserialize item {:?}", err);
-                        continue
+                        panic!("This should not happen. Closing!");
                     }
                 },
                 None => Poll::Ready(None),

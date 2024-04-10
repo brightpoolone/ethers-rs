@@ -8,7 +8,7 @@ use super::{
 use crate::JsonRpcError;
 use ethers_core::types::U256;
 use futures_channel::{mpsc, oneshot};
-use futures_util::{select_biased, StreamExt};
+use futures_util::{io::Close, select_biased, StreamExt};
 use serde_json::value::{to_raw_value, RawValue};
 use std::{
     collections::{BTreeMap, HashMap},
@@ -60,6 +60,12 @@ impl SubscriptionManager {
             }
         }
         self.aliases.remove(&server_id);
+    }
+
+    fn close(&mut self) {
+        for (_, sub) in &self.subs {
+            _ = sub.channel.unbounded_send(Default::default());
+        }
     }
 
     #[tracing::instrument(skip(self))]
@@ -506,6 +512,9 @@ impl RequestManager {
             }
             // Issue the shutdown command. we don't care if it is received
             self.backend.shutdown();
+
+            // Close all subscriptions 
+            self.subs.close();
         };
 
         #[cfg(target_arch = "wasm32")]
